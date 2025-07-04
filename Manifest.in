@@ -1,0 +1,3 @@
+recursive-include src/regioinvent/data *.json
+recursive-include src/regioinvent/data *.bw2package
+recursive-include src/regioinvent/data *.pickle
