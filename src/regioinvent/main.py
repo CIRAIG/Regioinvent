@@ -630,8 +630,10 @@ class Regioinvent:
                             self.distribution_technologies[product][exc["name"]] += exc[
                                 "amount"
                             ]
-                    if "transport" in exc["name"] and (
-                        "market for" in exc["name"] or "market group for" in exc["name"]
+                    if (
+                            ("transport" in exc["name"])
+                            & ("ton kilometer" == exc["unit"])
+                            & ("market for" in exc["name"] or "market group for" in exc["name"])
                     ):
                         self.transportation_modes[product][exc["code"]] = exc["amount"]
             # average the technology market share
