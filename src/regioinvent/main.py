@@ -63,15 +63,19 @@ class Regioinvent:
         self.name_ei_with_regionalized_biosphere = (
             ecoinvent_database_name + " regionalized"
         )
-        if ecoinvent_version not in ["3.9", "3.9.1", "3.10", "3.10.1"]:
+        if ecoinvent_version not in ["3.9", "3.9.1", "3.10", "3.10.1", "3.11", "3.12"]:
             raise KeyError(
                 "The version of ecoinvent you provided is not supported by Regioinvent."
-                "Supported versions are: 3.9, 3.9.1, 3.10 or 3.10.1"
+                "Supported versions are: 3.9/3.9.1, 3.10/3.10.1, 3.11, 3.12"
             )
         if ecoinvent_version in ["3.9", "3.9.1"]:
             self.ecoinvent_version = "3.9"
         elif ecoinvent_version in ["3.10", "3.10.1"]:
             self.ecoinvent_version = "3.10"
+        elif ecoinvent_version in ["3.11"]:
+            self.ecoinvent_version = "3.11"
+        elif ecoinvent_version in ["3.12"]:
+            self.ecoinvent_version = "3.12"
         # name is fixed
         self.name_spatialized_biosphere = "biosphere3_spatialized_flows"
 
