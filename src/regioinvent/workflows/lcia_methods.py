@@ -6,13 +6,19 @@ import numpy as np
 
 
 def _has_method_family(method_fragment):
-    fragment = method_fragment.lower()
-    return any(fragment in " | ".join(method).lower() for method in bd.methods)
+    if 'ReCiPe' in method_fragment:
+        return any(method for method in bd.methods if "regionalized" in method[0] and "ReCiPe 2016 v1.03" in method[0])
+    elif 'EF' in method_fragment:
+        return any(method for method in bd.methods if "regionalized" in method[0] and "EF v3.1" in method[0])
+    elif 'IMPACT World+' in method_fragment:
+        # TODO don't forget to update version number of IW+ in list comprehension
+        return any(method for method in bd.methods if "regionalized" in method[0] and "IMPACT World+" in method[0] and
+                   "2.1" in method[0])
 
 
 def _import_method_package(regio, relpath, method_fragment, label):
     if _has_method_family(method_fragment):
-        regio.logger.info(f"{label} already present in Brightway project; skipping import.")
+        regio.logger.info(f"Regionalized {label} already present in Brightway project; skipping import.")
         return
 
     with as_file(files("regioinvent").joinpath(relpath)) as file_path:
