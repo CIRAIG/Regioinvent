@@ -139,7 +139,7 @@ def change_electricity(regio, process, export_country):
                 "code": electricity_code,
                 "type": "technosphere",
                 "input": (
-                    regio.name_ei_with_regionalized_biosphere,
+                    regio.regionalized_ecoinvent_db_name,
                     electricity_code,
                 ),
                 "output": (process["database"], process["code"]),
@@ -240,7 +240,7 @@ def change_aluminium_electricity(regio, process, export_country):
                 "code": electricity_code,
                 "type": "technosphere",
                 "input": (
-                    regio.name_ei_with_regionalized_biosphere,
+                    regio.regionalized_ecoinvent_db_name,
                     electricity_code,
                 ),
                 "output": (process["database"], process["code"]),
@@ -315,7 +315,7 @@ def change_cobalt_electricity(regio, process):
                 "code": electricity_code,
                 "type": "technosphere",
                 "input": (
-                    regio.name_ei_with_regionalized_biosphere,
+                    regio.regionalized_ecoinvent_db_name,
                     electricity_code,
                 ),
                 "output": (process["database"], process["code"]),
@@ -388,7 +388,7 @@ def change_waste(regio, process, export_country):
             "database": process["database"],
             "code": waste_code,
             "type": "technosphere",
-            "input": (regio.name_ei_with_regionalized_biosphere, waste_code),
+            "input": (regio.regionalized_ecoinvent_db_name, waste_code),
             "output": (process["database"], process["code"]),
         }
     )
@@ -459,7 +459,7 @@ def change_heat(regio, process, export_country, heat_flow):
                 regio.ei_wurst,
                 ws.equals("reference product", heat_flow),
                 ws.equals("location", region_heat),
-                ws.equals("database", regio.name_ei_with_regionalized_biosphere),
+                ws.equals("database", regio.regionalized_ecoinvent_db_name),
                 ws.either(
                     ws.contains("name", "market for"),
                     ws.contains("name", "market group for"),
@@ -470,7 +470,7 @@ def change_heat(regio, process, export_country, heat_flow):
                 regio.ei_wurst,
                 ws.equals("reference product", heat_flow),
                 ws.equals("location", region_heat),
-                ws.equals("database", regio.name_ei_with_regionalized_biosphere),
+                ws.equals("database", regio.regionalized_ecoinvent_db_name),
                 ws.contains("name", "market for"),
             )
 
@@ -496,7 +496,7 @@ def change_heat(regio, process, export_country, heat_flow):
                     regio.ei_wurst,
                     ws.equals("reference product", heat_flow),
                     ws.equals("location", "GLO"),
-                    ws.equals("database", regio.name_ei_with_regionalized_biosphere),
+                    ws.equals("database", regio.regionalized_ecoinvent_db_name),
                     ws.either(
                         ws.contains("name", "market for"),
                         ws.contains("name", "market group for"),
@@ -559,7 +559,7 @@ def change_heat(regio, process, export_country, heat_flow):
                 "database": process["database"],
                 "code": code,
                 "type": "technosphere",
-                "input": (regio.name_ei_with_regionalized_biosphere, code),
+                "input": (regio.regionalized_ecoinvent_db_name, code),
                 "output": (process["database"], process["code"]),
             }
         )

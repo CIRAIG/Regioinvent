@@ -204,7 +204,7 @@ def first_order_regionalization(regio):
             """
             # filter the process to-be-copied
             process = exact_process_lookup[
-                (product, activity, region, regio.name_ei_with_regionalized_biosphere)
+                (product, activity, region, regio.regionalized_ecoinvent_db_name)
             ]
             regio_process = _clone_process_template(process)
             # change location
@@ -259,7 +259,7 @@ def first_order_regionalization(regio):
             if cache_key in template_input_flags_cache:
                 return template_input_flags_cache[cache_key]
             process = exact_process_lookup[
-                (product, activity, region, regio.name_ei_with_regionalized_biosphere)
+                (product, activity, region, regio.regionalized_ecoinvent_db_name)
             ]
             names = [exc.get("name", "") for exc in process["exchanges"]]
             products = [exc.get("product", "") for exc in process["exchanges"]]
@@ -368,11 +368,11 @@ def first_order_regionalization(regio):
                 {
                     "amount": regio.transportation_modes[product][transportation_mode],
                     "type": "technosphere",
-                    "database": regio.name_ei_with_regionalized_biosphere,
+                    "database": regio.regionalized_ecoinvent_db_name,
                     "code": transportation_mode,
                     "product": transport_ref_product_cache[transportation_mode],
                     "input": (
-                        regio.name_ei_with_regionalized_biosphere,
+                        regio.regionalized_ecoinvent_db_name,
                         transportation_mode,
                     ),
                 }
@@ -428,7 +428,7 @@ def first_order_regionalization(regio):
             """
             # filter the process to-be-copied
             process = exact_process_lookup[
-                (product, activity, region, regio.name_ei_with_regionalized_biosphere)
+                (product, activity, region, regio.regionalized_ecoinvent_db_name)
             ]
             regio_process = _clone_process_template(process)
             # change location
@@ -468,7 +468,7 @@ def first_order_regionalization(regio):
 
             # filter the process to-be-copied
             market_candidates = market_candidates_lookup.get(
-                (product, region, regio.name_ei_with_regionalized_biosphere), []
+                (product, region, regio.regionalized_ecoinvent_db_name), []
             )
             if not market_candidates:
                 raise ws.NoResults
@@ -511,7 +511,7 @@ def first_order_regionalization(regio):
             if cache_key in template_input_flags_cache:
                 return template_input_flags_cache[cache_key]
             process = exact_process_lookup[
-                (product, activity, region, regio.name_ei_with_regionalized_biosphere)
+                (product, activity, region, regio.regionalized_ecoinvent_db_name)
             ]
             names = [exc.get("name", "") for exc in process["exchanges"]]
             products = [exc.get("product", "") for exc in process["exchanges"]]

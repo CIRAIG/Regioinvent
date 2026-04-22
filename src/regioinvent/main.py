@@ -102,7 +102,7 @@ class Regioinvent:
 
         # set up necessary variables
         self.source_db_name = ecoinvent_database_name
-        self.name_ei_with_regionalized_biosphere = ecoinvent_database_name + " regionalized"
+        self.regionalized_ecoinvent_db_name = f"{ecoinvent_database_name} - regionalized"
         if ecoinvent_version not in ["3.9", "3.9.1", "3.10", "3.10.1"]:
             raise KeyError(
                 "The version of ecoinvent you provided is not supported by Regioinvent."
@@ -227,7 +227,7 @@ class Regioinvent:
         self.consumption_data = pd.DataFrame()
         self.production_data = pd.DataFrame()
         self.trade_conn = ""
-        self.target_db_name = f"{ecoinvent_database_name} - regionalized"
+        self.target_db_name = ""
         self.cutoff = 0
         self._spatialized_in_memory_ready = False
         self._final_database_in_memory = None
@@ -247,60 +247,8 @@ class Regioinvent:
     def import_fully_regionalized_impact_method(self, lcia_method="all"):
         return workflow_import_fully_regionalized_impact_method(self, lcia_method)
 
-    def regionalize_ecoinvent_with_trade(self, trade_database_path, cutoff):
-        return workflow_regionalize_ecoinvent_with_trade(self, trade_database_path, cutoff)
-
-    # TODO we use this function for showing the influence of spatialization for the article, after that, remove it
-    def create_ecoinvent_copy_without_regionalized_biosphere_flows(self):
-        """
-        In case the user does not want to regionalize biosphere flows, we still need a copy of ecoinvent to be able to
-        regionalize it later on. The goal is to always keep a "pristine" ecoinvent version.
-        """
-
-        # change the database name everywhere
-        for pr in self.ei_wurst:
-            pr["database"] = self.name_ei_with_regionalized_biosphere
-            for exc in pr["exchanges"]:
-                if exc["type"] in ["technosphere", "production"]:
-                    exc["input"] = (
-                        self.name_ei_with_regionalized_biosphere,
-                        exc["code"],
-                    )
-                    exc["database"] = self.name_ei_with_regionalized_biosphere
-
-        # add input key to each exchange
-        for pr in self.ei_wurst:
-            for exc in pr["exchanges"]:
-                try:
-                    exc["input"]
-                except KeyError:
-                    exc["input"] = (exc["database"], exc["code"])
-
-        # modify structure of data from wurst to bw2
-        self.ei_regio_data = {(i["database"], i["code"]): i for i in self.ei_wurst}
-
-        # recreate inputs in edges (exchanges)
-        for pr in self.ei_regio_data:
-            for exc in self.ei_regio_data[pr]["exchanges"]:
-                try:
-                    exc["input"]
-                except KeyError:
-                    exc["input"] = (exc["database"], exc["code"])
-        # wurst creates empty categories for activities, this creates an issue when you try to write the bw2 database
-        for pr in self.ei_regio_data:
-            try:
-                del self.ei_regio_data[pr]["categories"]
-            except KeyError:
-                pass
-        # same with parameters
-        for pr in self.ei_regio_data:
-            try:
-                del self.ei_regio_data[pr]["parameters"]
-            except KeyError:
-                pass
-
-        # write ecoinvent-regionalized database
-        bd.Database(self.name_ei_with_regionalized_biosphere).write(self.ei_regio_data)
+    def regionalize_ecoinvent_with_trade(self, trade_database_path, target_database_name, cutoff):
+        return workflow_regionalize_ecoinvent_with_trade(self, trade_database_path, target_database_name, cutoff)
 
     def format_trade_data(self):
         return workflow_format_trade_data(self)
@@ -320,8 +268,8 @@ class Regioinvent:
     def write_regioinvent_to_database(self):
         return workflow_write_regioinvent_to_database(self)
 
-    def write_database(self, target_db_name=None):
-        return workflow_write_database(self, target_db_name=target_db_name)
+    def write_database(self):
+        return workflow_write_database(self)
 
     def connect_ecoinvent_to_regioinvent(self):
         return workflow_connect_ecoinvent_to_regioinvent(self)

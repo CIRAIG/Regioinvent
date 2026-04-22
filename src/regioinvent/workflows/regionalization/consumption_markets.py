@@ -166,7 +166,7 @@ def create_consumption_markets(regio):
             # add transportation to consumption market
             for transportation_mode in regio.transportation_modes[product]:
                 inp = (
-                    regio.name_ei_with_regionalized_biosphere,
+                    regio.regionalized_ecoinvent_db_name,
                     transportation_mode,
                 )
                 exchange_amounts[inp] += regio.transportation_modes[product][transportation_mode]
