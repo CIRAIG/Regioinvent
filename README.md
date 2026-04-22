@@ -63,20 +63,41 @@ global production process of ```Regioinvent```.
 
 ## Get started
 
-Regioinvent can be install through ```pip```
+Regioinvent can be installed through `pip`.
 
-```pip install regioinvent```
+Install with Brightway2-compatible libraries:
 
-You can also git clone this repository or simply download it.
+```bash
+pip install "regioinvent[bw2]"
+```
+
+Install with newer Brightway 2.5-compatible libraries:
+
+```bash
+pip install "regioinvent[bw25]"
+```
+
+For local development (editable install) from a cloned repository:
+
+```bash
+pip install -e ".[bw2]"
+# or
+pip install -e ".[bw25]"
+```
+
+If Brightway libraries are already installed and should not be touched:
+
+```bash
+pip install -e . --no-deps
+```
 
 You will need a few things to get started:
 - Regioinvent does not provide the ecoinvent database, so you need to buy an ecoinvent license yourself.
 - Download all the required trade data that were already extracted.
 You can download it from [here](https://doi.org/10.5281/zenodo.11583814). Make sure to take the latest available version.
-- Install ```brightway2``` and have a brightway2 project with either ecoinvent3.9.1 cut-off or ecoinvent3.10.1 cut-off
+- Install Brightway libraries and have a Brightway project with either ecoinvent3.9.1 cut-off or ecoinvent3.10.1 cut-off.
 
-Note that regioinvent currently only supports the ecoinvent 3.9/3.9.1/3.10/3.10.1 cut-off versions and operates solely on 
-brightway2 (NOT brightway2.5).
+Note that regioinvent currently only supports the ecoinvent 3.9/3.9.1/3.10/3.10.1 cut-off versions.
 
 You can then follow the steps presented in the [demo.ipynb](https://github.com/CIRAIG/Regioinvent/tree/master/doc/demo.ipynb) 
 Jupyter notebook.
@@ -84,9 +105,8 @@ Jupyter notebook.
 Recommended python version: 3.11.8
 
 ## How to use after running the code?
-Once the regionalized version of ecoinvent is created on Python, it will automatically be exported to your brightway2
-project. You will then be able to
-perform your LCAs either through brightway2 or activity-browser as you would with the regular ecoinvent database. <br> 
+Once the regionalized version of ecoinvent is created on Python, it can be exported to your Brightway
+project. You will then be able to perform your LCAs either through Brightway or activity-browser as you would with the regular ecoinvent database. <br>
 Do note that calculations can be longer with ```Regioinvent``` depending on the cutoff you select. WIth a cutoff of 0.75,
 calculations times are similar to ones with normal ecoinvent (a few seconds). With a cutoff of 0.99, the size of the
 regioinvent database increases 

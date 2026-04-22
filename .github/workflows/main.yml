@@ -1,0 +1,216 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*", "*"]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+jobs:
+  install-matrix:
+    name: Install (${{ matrix.os }}, py${{ matrix.python-version }}, ${{ matrix.bw }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
+        bw: [bw2, bw25]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package (editable)
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -e ".[${{ matrix.bw }}]"
+
+      - name: Smoke import
+        run: |
+          python -c "import regioinvent; print('regioinvent import OK')"
+
+  workflow-smoke:
+    name: Workflow smoke (Ubuntu, py3.11, bw2)
+    runs-on: ubuntu-latest
+    needs: install-matrix
+    timeout-minutes: 120
+    env:
+      ECOINVENT_USERNAME: ${{ secrets.ECOINVENT_USERNAME }}
+      ECOINVENT_PASSWORD: ${{ secrets.ECOINVENT_PASSWORD }}
+      ECOINVENT_VERSION: ${{ vars.ECOINVENT_VERSION || '3.10.1' }}
+      ECOINVENT_SYSTEM_MODEL: ${{ vars.ECOINVENT_SYSTEM_MODEL || 'cutoff' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check ecoinvent secrets
+        id: smoke_gate
+        shell: bash
+        run: |
+          if [ -z "${ECOINVENT_USERNAME:-}" ] || [ -z "${ECOINVENT_PASSWORD:-}" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping workflow-smoke: ECOINVENT_USERNAME/ECOINVENT_PASSWORD not set."
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Python
+        if: ${{ steps.smoke_gate.outputs.run == 'true' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package (bw2)
+        if: ${{ steps.smoke_gate.outputs.run == 'true' }}
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -e ".[bw2]"
+
+      - name: Download and import ecoinvent
+        if: ${{ steps.smoke_gate.outputs.run == 'true' }}
+        run: |
+          python - <<'PY'
+          import inspect
+          import os
+
+          import bw2data as bd
+          import bw2io as bi
+
+          username = os.environ["ECOINVENT_USERNAME"]
+          password = os.environ["ECOINVENT_PASSWORD"]
+          version = os.getenv("ECOINVENT_VERSION", "3.10.1")
+          system_model = os.getenv("ECOINVENT_SYSTEM_MODEL", "cutoff")
+
+          bd.projects.set_current("regioinvent-ci")
+
+          importer = getattr(bi, "import_ecoinvent_release", None)
+          if importer is None and hasattr(bi, "ecoinvent"):
+              importer = getattr(bi.ecoinvent, "import_ecoinvent_release", None)
+          if importer is None:
+              raise RuntimeError("Could not find bw2io ecoinvent importer")
+
+          kwargs = {
+              "version": version,
+              "system_model": system_model,
+              "username": username,
+              "password": password,
+              "overwrite": False,
+              "biosphere_name": "biosphere3",
+          }
+          sig = inspect.signature(importer)
+          call_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
+          importer(**call_kwargs)
+
+          db_name = f"ecoinvent-{version}-{system_model}"
+          if db_name not in bd.databases:
+              raise RuntimeError(f"Expected ecoinvent db '{db_name}' not found. Found: {list(bd.databases)}")
+          print("Imported", db_name)
+          PY
+
+      - name: Run workflow smoke
+        if: ${{ steps.smoke_gate.outputs.run == 'true' }}
+        run: |
+          python - <<'PY'
+          import os
+
+          import bw2data as bd
+          import regioinvent
+
+          version = os.getenv("ECOINVENT_VERSION", "3.10.1")
+          system_model = os.getenv("ECOINVENT_SYSTEM_MODEL", "cutoff")
+          source_db = f"ecoinvent-{version}-{system_model}"
+
+          bd.projects.set_current("regioinvent-ci")
+
+          regio = regioinvent.Regioinvent(
+              bw_project_name="regioinvent-ci",
+              ecoinvent_database_name=source_db,
+              ecoinvent_version=version,
+          )
+          regio.spatialize_my_ecoinvent()
+          regio.import_fully_regionalized_impact_method("all")
+          print("Workflow smoke completed")
+          PY
+
+  publish-pypi:
+    name: Publish PyPI
+    runs-on: ubuntu-latest
+    needs: install-matrix
+    if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/') }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build distributions
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true
+
+  publish-conda:
+    name: Publish Anaconda
+    runs-on: ubuntu-latest
+    needs: install-matrix
+    if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          channels: conda-forge
+          channel-priority: strict
+          activate-environment: build
+          python-version: "3.12"
+
+      - name: Build conda packages
+        shell: bash -l {0}
+        run: |
+          conda install -y conda-build anaconda-client
+          conda build conda/recipe
+
+      - name: Upload conda packages
+        shell: bash -l {0}
+        env:
+          ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+          ANACONDA_USERNAME: ${{ secrets.ANACONDA_USERNAME }}
+        run: |
+          if [ -z "${ANACONDA_API_TOKEN:-}" ] || [ -z "${ANACONDA_USERNAME:-}" ]; then
+            echo "Skipping upload: ANACONDA_API_TOKEN/ANACONDA_USERNAME not set."
+            exit 0
+          fi
+          mapfile -t PACKAGES < <(conda build conda/recipe --output)
+          for pkg in "${PACKAGES[@]}"; do
+            echo "Uploading ${pkg}"
+            anaconda -t "${ANACONDA_API_TOKEN}" upload -u "${ANACONDA_USERNAME}" "${pkg}" --skip-existing
+          done

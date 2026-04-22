@@ -1,0 +1,67 @@
+{% set version_match = load_file_regex(load_file='src/regioinvent/__init__.py', regex_pattern='__version__ = "([^"]+)"') %}
+{% set version = version_match.group(1) %}
+
+package:
+  name: regioinvent
+  version: {{ version }}
+
+source:
+  path: ../..
+
+build:
+  noarch: python
+  number: 0
+
+requirements:
+  host:
+    - python >=3.10
+    - pip
+    - setuptools >=68
+
+outputs:
+  - name: regioinvent-bw2
+    build:
+      noarch: python
+      script: "{{ PYTHON }} -m pip install . -vv --no-deps"
+    requirements:
+      host:
+        - python >=3.10
+        - pip
+        - setuptools >=68
+      run:
+        - python >=3.10
+        - pandas
+        - tqdm
+        - wurst
+        - bw2data <4.0.0
+        - bw2io <0.9.0
+        - bw2calc <2.0.0
+    test:
+      imports:
+        - regioinvent
+
+  - name: regioinvent-bw25
+    build:
+      noarch: python
+      script: "{{ PYTHON }} -m pip install . -vv --no-deps"
+    requirements:
+      host:
+        - python >=3.10
+        - pip
+        - setuptools >=68
+      run:
+        - python >=3.10
+        - pandas
+        - tqdm
+        - wurst
+        - bw2data >=4.0.0
+        - bw2io >=0.9.0
+        - bw2calc >=2.0.0
+    test:
+      imports:
+        - regioinvent
+
+about:
+  home: https://github.com/CIRAIG/Regioinvent
+  summary: Regionalize ecoinvent processes using COMTRADE trade data.
+  license: BSD-3-Clause
