@@ -5,6 +5,62 @@ import bw2data as bd
 import pandas as pd
 
 
+_MISSING = object()
+
+
+def _as_bw_database_dict(datasets):
+    """
+    Normalize an in-memory database into the mapping shape expected by Brightway.
+    """
+
+    data = {(ds["database"], ds["code"]): ds for ds in datasets}
+
+    for ds in data.values():
+        for exc in ds.get("exchanges", []):
+            if "input" not in exc and "database" in exc and "code" in exc:
+                exc["input"] = (exc["database"], exc["code"])
+            if exc.get("type") == "production" and "output" not in exc:
+                exc["output"] = (ds["database"], ds["code"])
+
+        ds.pop("categories", None)
+        ds.pop("parameters", None)
+
+    return data
+
+
+def _write_databases_unprocessed_then_process(regio, dbs_to_write):
+    """
+    Write mutually dependent Brightway databases in two phases:
+    raw rows first, processing only after both exist in the project.
+    """
+
+    preferences = bd.preferences
+    had_allow_incomplete = "allow incomplete imports" in preferences
+    original_allow_incomplete = preferences.get("allow incomplete imports", _MISSING)
+
+    preferences["allow incomplete imports"] = True
+    if hasattr(preferences, "flush"):
+        preferences.flush()
+
+    try:
+        for db_name, data in dbs_to_write:
+            regio.logger.info(
+                f"Writing Brightway database {db_name!r} without processing..."
+            )
+            bd.Database(db_name).write(data, process=False)
+
+        for db_name, _ in dbs_to_write:
+            regio.logger.info(f"Processing Brightway database {db_name!r}...")
+            bd.Database(db_name).process()
+    finally:
+        if had_allow_incomplete:
+            preferences["allow incomplete imports"] = original_allow_incomplete
+        else:
+            preferences.pop("allow incomplete imports", None)
+        if hasattr(preferences, "flush"):
+            preferences.flush()
+
+
 def format_trade_data(regio):
     """
     Function extracts and formats the export/import and domestic production data from the trade database
@@ -176,39 +232,40 @@ def write_database_romain(regio, target_db_name=None):
 
 
 def write_database(regio):
+    if not getattr(regio, "_spatialized_in_memory_ready", False) or not regio.ei_wurst:
+        raise ValueError(
+            "No in-memory spatialized ecoinvent found. Run spatialize_my_ecoinvent() first."
+        )
 
-    regio.logger.info("Write regioinvent database to brightway...")
+    regio.logger.info("Write linked in-memory databases to brightway...")
 
-    # change regioinvent data from wurst to bw2 structure
-    regioinvent_data = {
-        (i["database"], i["code"]): i for i in regio.regioinvent_in_wurst
-    }
+    dbs_to_write = [
+        (
+            regio.regionalized_ecoinvent_db_name,
+            _as_bw_database_dict(regio.ei_wurst),
+        )
+    ]
 
-    # recreate inputs in edges (exchanges)
-    for pr in regioinvent_data:
-        for exc in regioinvent_data[pr]["exchanges"]:
-            try:
-                exc["input"]
-            except KeyError:
-                exc["input"] = (exc["database"], exc["code"])
-    # wurst creates empty categories for activities, this creates an issue when you try to write the bw2 database
-    for pr in regioinvent_data:
-        try:
-            del regioinvent_data[pr]["categories"]
-        except KeyError:
-            pass
+    if regio.regioinvent_in_wurst:
+        if not regio.target_db_name:
+            raise ValueError(
+                "No regioinvent target database name set. "
+                "Run regionalize_ecoinvent_with_trade() first."
+            )
+        dbs_to_write.append(
+            (
+                regio.target_db_name,
+                _as_bw_database_dict(regio.regioinvent_in_wurst),
+            )
+        )
 
-    # write regioinvent database in brightway2
-    bd.Database(regio.target_db_name).write(regioinvent_data)
+    _write_databases_unprocessed_then_process(regio, dbs_to_write)
 
 
-def connect_ecoinvent_to_regioinvent_romain(regio):
+def _connect_ecoinvent_to_regioinvent_in_memory(regio):
     """
-    Now that regioinvent exists, we can make ecoinvent use regioinvent processes to further deepen the
-    regionalization. Only countries and sub-countries are connected to regioinvent, simply because in regioinvent
-    we do not have consumption mixes for the different regions of ecoinvent (e.g., RER, RAS, etc.).
-    However, Swiss processes are not affected, as ecoinvent was already tailored for the Swiss case.
-    I am not sure regioinvent would bring more precision in that specific case.
+    Relink the in-memory spatialized ecoinvent copy to the in-memory regioinvent
+    datasets before either database is written to Brightway.
     """
 
     regio.logger.info("Connecting ecoinvent to regioinvent processes...")
@@ -363,221 +420,21 @@ def connect_ecoinvent_to_regioinvent_romain(regio):
                         exc["code"] = regio_dict[match_key]
                         exc["input"] = (exc["database"], exc["code"])
 
-    # Build final in-memory database that can later be written once.
+    # Build final in-memory database that can later be inspected or written.
     regio._final_database_in_memory = list(regio.ei_wurst) + list(regio.regioinvent_in_wurst)
+
+
+def connect_ecoinvent_to_regioinvent_romain(regio):
+    return _connect_ecoinvent_to_regioinvent_in_memory(regio)
 
 
 def connect_ecoinvent_to_regioinvent(regio):
     """
-    Now that regioinvent exists, we can make ecoinvent use regioinvent processes to further deepen the
-    regionalization. Only countries and sub-countries are connected to regioinvent, simply because in regioinvent
-    we do not have consumption mixes for the different regions of ecoinvent (e.g., RER, RAS, etc.).
-    However, Swiss processes are not affected, as ecoinvent was already tailored for the Swiss case.
-    I am not sure regioinvent would bring more precision in that specific case.
+    Relink the in-memory spatialized ecoinvent copy to regioinvent before the
+    two dependent databases are written and processed.
     """
 
-    # Here we are directly manipulating (through bw2) the already-written ecoinvent database
-    regio.logger.info("Connecting ecoinvent to regioinvent processes...")
-
-    # as dictionary to speed searching for information
-    consumption_markets_data = {
-        (i["name"], i["location"]): i
-        for i in regio.regioinvent_in_wurst
-        if "consumption market" in i["name"]
-    }
-    regionalized_products = set(
-        [i["reference product"] for i in regio.regioinvent_in_wurst]
-    )
-    techno_mixes = {
-        (i["name"], i["location"]): i["code"]
-        for i in regio.regioinvent_in_wurst
-        if "technology mix" in i["name"]
-    }
-
-    for process in bd.Database(regio.regionalized_ecoinvent_db_name):
-        # find country/sub-country locations for process, we ignore regions
-        location = None
-        # for countries (e.g., CA)
-        if (
-            process.as_dict()["location"]
-            in regio.country_to_ecoinvent_regions.keys()
-        ):
-            location = process.as_dict()["location"]
-        # for sub-countries (e.g., CA-QC)
-        elif (
-            process.as_dict()["location"].split("-")[0]
-            in regio.country_to_ecoinvent_regions.keys()
-        ):
-            location = process.as_dict()["location"].split("-")[0]
-        # check if location is not None and not Switzerland
-        if location and location != "CH":
-            # loop through technosphere exchanges
-            for exc in process.technosphere():
-                # if the product of the exchange is among the internationally traded commodities
-                if exc.as_dict()["product"] in regio.eco_to_hs_class.keys():
-                    # get the name of the corresponding consumtion market
-                    exc.as_dict()["name"] = (
-                        "consumption market for " + exc.as_dict()["product"]
-                    )
-                    # get the location of the process
-                    exc.as_dict()["location"] = location
-                    # if the consumption market exists for the process location
-                    if (
-                        "consumption market for " + exc.as_dict()["product"],
-                        location,
-                    ) in consumption_markets_data.keys():
-                        exc.as_dict()["database"] = consumption_markets_data[
-                            (
-                                "consumption market for "
-                                + exc.as_dict()["product"],
-                                location,
-                            )
-                        ]["database"]
-                        exc.as_dict()["code"] = consumption_markets_data[
-                            (
-                                "consumption market for "
-                                + exc.as_dict()["product"],
-                                location,
-                            )
-                        ]["code"]
-                    # if the consumption market does not exist for the process location, take RoW
-                    else:
-                        exc.as_dict()["database"] = consumption_markets_data[
-                            (
-                                "consumption market for "
-                                + exc.as_dict()["product"],
-                                "RoW",
-                            )
-                        ]["database"]
-                        exc.as_dict()["code"] = consumption_markets_data[
-                            (
-                                "consumption market for "
-                                + exc.as_dict()["product"],
-                                "RoW",
-                            )
-                        ]["code"]
-                    exc.as_dict()["input"] = (
-                        exc.as_dict()["database"],
-                        exc.as_dict()["code"],
-                    )
-                    exc.save()
-                # if the product of the exchange is among the non-international traded commodities
-                elif (
-                    exc.as_dict()["product"] in regionalized_products
-                    and exc.as_dict()["product"] not in regio.eco_to_hs_class.keys()
-                ):
-                    try:
-                        # if techno mix for location exists
-                        exc.as_dict()["code"] = techno_mixes[
-                            (
-                                "technology mix for " + exc.as_dict()["product"],
-                                location,
-                            )
-                        ]
-                        exc.as_dict()["database"] = regio.target_db_name
-                        exc.as_dict()["name"] = (
-                            "technology mix for " + exc.as_dict()["product"]
-                        )
-                        exc.as_dict()["location"] = location
-                        exc.as_dict()["input"] = (
-                            exc.as_dict()["database"],
-                            exc.as_dict()["code"],
-                        )
-                        exc.save()
-                    except KeyError:
-                        # if not, link to RoW
-                        exc.as_dict()["code"] = techno_mixes[
-                            (
-                                "technology mix for " + exc.as_dict()["product"],
-                                "RoW",
-                            )
-                        ]
-                        exc.as_dict()["database"] = regio.target_db_name
-                        exc.as_dict()["name"] = (
-                            "technology mix for " + exc.as_dict()["product"]
-                        )
-                        exc.as_dict()["location"] = "RoW"
-                        exc.as_dict()["input"] = (
-                            exc.as_dict()["database"],
-                            exc.as_dict()["code"],
-                        )
-                        exc.save()
-
-    # aggregating duplicate inputs (e.g., multiple consumption markets RoW callouts)
-    for process in bd.Database(regio.regionalized_ecoinvent_db_name):
-        duplicates = [
-            item
-            for item, count in collections.Counter(
-                [
-                    (
-                        i.as_dict()["input"],
-                        i.as_dict()["name"],
-                        i.as_dict()["product"],
-                        i.as_dict()["location"],
-                        i.as_dict()["database"],
-                        i.as_dict()["code"],
-                    )
-                    for i in process.technosphere()
-                ]
-            ).items()
-            if count > 1
-        ]
-
-        for duplicate in duplicates:
-            total = sum(
-                [
-                    i["amount"]
-                    for i in process.technosphere()
-                    if i["input"] == duplicate[0]
-                ]
-            )
-            [
-                i.delete()
-                for i in process.technosphere()
-                if i["input"] == duplicate[0]
-            ]
-            new_exc = process.new_exchange(
-                amount=total,
-                type="technosphere",
-                input=duplicate[0],
-                name=duplicate[1],
-                product=duplicate[2],
-                location=duplicate[3],
-                database=duplicate[4],
-                code=duplicate[5],
-            )
-            new_exc.save()
-
-    # we also change production processes of ecoinvent for regionalized production processes of regioinvent
-    regio_dict = {
-        (
-            i.as_dict()["reference product"],
-            i.as_dict()["name"],
-            i.as_dict()["location"],
-        ): i
-        for i in bd.Database(regio.target_db_name)
-    }
-
-    for process in bd.Database(regio.regionalized_ecoinvent_db_name):
-        for exc in process.technosphere():
-            if exc.as_dict()["product"] in regio.eco_to_hs_class.keys():
-                # same thing, we don't touch Swiss processes
-                if exc.as_dict()["location"] not in ["RoW", "CH"]:
-                    try:
-                        exc.as_dict()["database"] = regio.target_db_name
-                        exc.as_dict()["code"] = regio_dict[
-                            (
-                                exc.as_dict()["product"],
-                                exc.as_dict()["name"],
-                                exc.as_dict()["location"],
-                            )
-                        ].as_dict()["code"]
-                        exc.as_dict()["input"] = (
-                            exc.as_dict()["database"],
-                            exc.as_dict()["code"],
-                        )
-                    except KeyError:
-                        pass
+    return _connect_ecoinvent_to_regioinvent_in_memory(regio)
 
 
 def write_regioinvent_to_database(regio):

@@ -104,9 +104,39 @@ Jupyter notebook.
 
 Recommended python version: 3.11.8
 
+## User workflow
+
+The recommended user-side workflow is now:
+
+```python
+import regioinvent
+
+regio = regioinvent.Regioinvent(
+    bw_project_name="your-brightway-project",
+    ecoinvent_database_name="your-ecoinvent-database",
+    ecoinvent_version="3.10.1",
+)
+
+regio.spatialize_my_ecoinvent()
+regio.import_fully_regionalized_impact_method()  # optional
+regio.regionalize_ecoinvent_with_trade(
+    trade_database_path="/path/to/trade_data.db",
+    target_database_name="Regioinvent",
+    cutoff=0.99,
+)
+```
+
+Important notes:
+- `spatialize_my_ecoinvent()` now writes `biosphere3_spatialized_flows`, but keeps the spatialized ecoinvent copy in memory at this stage.
+- `regionalize_ecoinvent_with_trade(...)` now performs the in-memory relinking between the spatialized ecoinvent copy and the regioinvent database, and then writes both Brightway databases at the end of the workflow.
+- You no longer need to call `write_database()` separately after `regionalize_ecoinvent_with_trade(...)` in the normal high-level workflow.
+- The final Brightway databases are:
+  - `your-ecoinvent-database - regionalized`
+  - the `target_database_name` you passed, e.g. `Regioinvent`
+
 ## How to use after running the code?
-Once the regionalized version of ecoinvent is created on Python, it can be exported to your Brightway
-project. You will then be able to perform your LCAs either through Brightway or activity-browser as you would with the regular ecoinvent database. <br>
+Once the workflow has finished, the spatialized ecoinvent copy and the regioinvent database have already been written to your Brightway
+project. You can then perform your LCAs either through Brightway or activity-browser as you would with the regular ecoinvent database. <br>
 Do note that calculations can be longer with ```Regioinvent``` depending on the cutoff you select. WIth a cutoff of 0.75,
 calculations times are similar to ones with normal ecoinvent (a few seconds). With a cutoff of 0.99, the size of the
 regioinvent database increases 
