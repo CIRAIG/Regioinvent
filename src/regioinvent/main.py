@@ -75,7 +75,7 @@ class Regioinvent:
         :param bw_project_name:         [str] the name of a brightway2 project containing an ecoinvent database.
         :param ecoinvent_database_name: [str] the name of the ecoinvent database within the brightway2 project.
         :param ecoinvent_version:       [str] the version of the ecoinvent database within the brightway2 project,
-                                            values can be "3.9", "3.9.1", "3.10" or "3.10.1".
+                                            values can be "3.10" or "3.10.1". "3.11", "3.12".
         """
 
         # set up logging tool
@@ -102,14 +102,13 @@ class Regioinvent:
 
         self.source_db_name = ecoinvent_database_name
         self.regionalized_ecoinvent_db_name = f"{ecoinvent_database_name} - regionalized"
-        if ecoinvent_version not in ["3.9", "3.9.1", "3.10", "3.10.1", "3.11", "3.12"]:
+        if ecoinvent_version not in ["3.10", "3.10.1", "3.11", "3.12"]:
             raise KeyError(
                 "The version of ecoinvent you provided is not supported by Regioinvent."
-                "Supported versions are: 3.9/3.9.1, 3.10/3.10.1, 3.11, 3.12"
+                "Supported versions are:  3.10/3.10.1, 3.11, 3.12"
             )
-        if ecoinvent_version in ["3.9", "3.9.1"]:
-            self.ecoinvent_version = "3.9"
-        elif ecoinvent_version in ["3.10", "3.10.1"]:
+
+        if ecoinvent_version in ["3.10", "3.10.1"]:
             self.ecoinvent_version = "3.10"
         elif ecoinvent_version in ["3.11"]:
             self.ecoinvent_version = "3.11"

@@ -95,9 +95,9 @@ You will need a few things to get started:
 - Regioinvent does not provide the ecoinvent database, so you need to buy an ecoinvent license yourself.
 - Download all the required trade data that were already extracted.
 You can download it from [here](https://doi.org/10.5281/zenodo.11583814). Make sure to take the latest available version.
-- Install Brightway libraries and have a Brightway project with either ecoinvent3.9.1 cut-off or ecoinvent3.10.1 cut-off.
+- Install Brightway libraries and have a Brightway project an accepted version of ecoinvent.
 
-Note that regioinvent currently only supports the ecoinvent 3.9/3.9.1/3.10/3.10.1 cut-off versions.
+Note that regioinvent currently supports the ecoinvent 3.10/3.10.1/3.11/3.12 cut-off versions.
 
 You can then follow the steps presented in the [demo.ipynb](https://github.com/CIRAIG/Regioinvent/tree/master/doc/demo.ipynb) 
 Jupyter notebook.
@@ -131,7 +131,6 @@ For a deep dive in the methodology of regioinvent, take a look at the Methodolog
 
 ## Future developments
 Next steps for regioinvent are to:
-- operate with the ecoinvent 3.11 version
 - adapt the transportation within the different markets to reflect the origins of commodities
 - link with the LC-impact LCIA methodology
 - derive and integrate uncertainty factors for consumption markets, based on the year-to-year trade variations
@@ -142,5 +141,5 @@ Contact [maxime.agez@polymtl.ca](mailto:maxime.agez@polymtl.ca)
 
 ## Citation
 Citing the code: https://doi.org/10.5281/zenodo.11836125 <br>
-Citing the article: https://doi.org/10.21203/rs.3.rs-8159063/v1 <br>
+Citing the article: https://doi.org/10.1007/s44498-026-00053-9 <br>
 Citing BACI: Gaulier, G. and Zignago, S. (2010) BACI: International Trade Database at the Product-Level. The 1994-2007 Version. CEPII Working Paper, N°2010-23.
