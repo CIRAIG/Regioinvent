@@ -37,7 +37,7 @@ def format_trade_data(regio):
     regio.production_data = pd.concat(
         [
             net_exports_data,
-            regio.domestic_production.drop(["source", "importer"], axis=1),
+            regio.domestic_production.drop(["source"], axis=1),
         ]
     )
     regio.production_data = (

@@ -31,7 +31,29 @@ def create_consumption_markets(regio):
         .sort_index()
     )
     # Precompute source text once per cmdCode.
-    source_by_cmd = regio.domestic_production.groupby("cmdCode")["source"].first().to_dict()
+    sources = set(zip(regio.domestic_production.cmdCode, regio.domestic_production.source))
+    source_by_cmd = {}
+    # Loop through your zipped data
+    for code, source in sources:
+        # Check if "PRODCOM" is in the source string
+        if "PRODCOM" in source:
+            source_by_cmd[code] = "PRODCOM & EXIOBASE"
+        else:
+            # Only assign if the code isn't already set to "PRODCOM"
+            # (This prevents a non-PRODCOM source from overwriting a PRODCOM one)
+            if source_by_cmd.get(code) != "PRODCOM & EXIOBASE":
+                source_by_cmd[code] = source
+    replacements = {
+        "FAOSTAT": "FAOSTAT",
+        "USGS": "USGS",
+        "OICA": "OICA",
+        "World Steel Association": "World Steel"
+    }
+
+    source_by_cmd = {
+        code: next((target for sub, target in replacements.items() if sub in source), "EXIOBASE")
+        for code, source in source_by_cmd.items()
+    }
 
     for product in tqdm(regio.eco_to_hs_class, leave=True):
         cmd_code = regio.eco_to_hs_class[product]
@@ -79,13 +101,6 @@ def create_consumption_markets(regio):
             )
         cmd_consumption_data = cmd_consumption_data.fillna(0)
 
-        source_raw = source_by_cmd.get(cmd_code)
-        if source_raw:
-            source = source_raw.split(" - ")[0]
-        else:
-            # Product is only consumed domestically and not exported according to exiobase.
-            source = "EXIOBASE"
-
         # Build O(1) technology->code lookup by trading partner.
         codes_by_partner = {}
         for partner in regio.created_geographies[product]:
@@ -108,7 +123,7 @@ def create_consumption_markets(regio):
                 "type": "process",
                 "unit": regio.unit[product],
                 "code": uuid.uuid4().hex,
-                "comment": f"""This process represents the consumption market of {product} in {consumer}. The shares were determined based on two aspects. The imports of the commodity {regio.eco_to_hs_class[product]} taken from the BACI database (average over the years 2018, 2019, 2020, 2021, 2022). The domestic consumption data was extracted/estimated from {source}.""",
+                "comment": f"""This process represents the consumption market of {product} in {consumer}. The shares were determined based on two aspects. The imports of the commodity {regio.eco_to_hs_class[product]} taken from the BACI database (average over the years 2020, 2021, 2022, 2023, 2024). The domestic consumption data was extracted/estimated from {source_by_cmd.get(cmd_code)}.""",
                 "database": regio.target_db_name,
                 "exchanges": [],
             }
