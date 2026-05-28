@@ -130,11 +130,6 @@ def spatialize_my_ecoinvent(regio):
 
         regio._spatialized_in_memory_ready = True
 
-        # write the ecoinvent-regionalized database to brightway
-        bd.Database(regio.regionalized_ecoinvent_db_name).write(
-            regio.ei_regio_data
-        )
-
     else:
         regio.logger.info("Spatialized ecoinvent is already imported...")
 

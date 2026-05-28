@@ -32,26 +32,29 @@ def create_consumption_markets(regio):
     )
     # Precompute source text once per cmdCode.
     sources = set(zip(regio.domestic_production.cmdCode, regio.domestic_production.source))
+
     source_by_cmd = {}
     # Loop through your zipped data
     for code, source in sources:
         # Check if "PRODCOM" is in the source string
         if "PRODCOM" in source:
-            source_by_cmd[code] = "PRODCOM & EXIOBASE"
+            source_by_cmd[code] = "PRODCOM"
         else:
             # Only assign if the code isn't already set to "PRODCOM"
             # (This prevents a non-PRODCOM source from overwriting a PRODCOM one)
-            if source_by_cmd.get(code) != "PRODCOM & EXIOBASE":
+            if source_by_cmd.get(code) != "PRODCOM":
                 source_by_cmd[code] = source
     replacements = {
-        "FAOSTAT": "FAOSTAT",
-        "USGS": "USGS",
-        "OICA": "OICA",
-        "World Steel Association": "World Steel"
+        "FAOSTAT": "FAOSTAT (https://www.fao.org/faostat/en/#data)",
+        "USGS": "USGS (https://www.usgs.gov/centers/national-minerals-information-center/mineral-commodity-summaries)",
+        "OICA": "OICA (https://oica.net/production-statistics/)",
+        "World Steel": "World Steel Association (https://worldsteel.org/data/annual-production-steel-data)",
+        "PRODCOM": "PRODCOM (https://ec.europa.eu/eurostat/databrowser/bulk) & EXIOBASE (https://doi.org/10.5281/zenodo.3583070)"
     }
 
     source_by_cmd = {
-        code: next((target for sub, target in replacements.items() if sub in source), "EXIOBASE")
+        code: next((target for sub, target in replacements.items() if sub in source),
+                   "EXIOBASE (https://doi.org/10.5281/zenodo.3583070)")
         for code, source in source_by_cmd.items()
     }
 
