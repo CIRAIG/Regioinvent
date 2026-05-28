@@ -38,8 +38,8 @@ def regionalize_ecoinvent_with_trade(regio, trade_database_path, target_database
         regio.create_consumption_markets,
         regio.second_order_regionalization,
         regio.spatialize_elem_flows,
-        regio.write_database,
         regio.connect_ecoinvent_to_regioinvent,
+        regio.write_database,
     ]
     for stage_fn in stages:
         stage_fn()

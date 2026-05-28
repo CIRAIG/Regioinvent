@@ -124,9 +124,9 @@ def configured_regio():
     regio.import_fully_regionalized_impact_method()
     regio.regionalize_ecoinvent_with_trade(
         trade_database_path=trade_db_path,
+        target_database_name=regio_db_name,
         cutoff=cutoff,
     )
-    regio.write_database(target_db_name=regio_db_name)
 
     return regio
 
