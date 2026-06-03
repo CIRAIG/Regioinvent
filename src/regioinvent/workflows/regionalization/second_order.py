@@ -101,6 +101,13 @@ def second_order_regionalization(regio):
                     0,
                     len(other_processes_data[(exc["product"], process["location"])]),
                 ):
+                    # for technology mixes where there are losses, e.g., for tap water
+                    if process['reference product'] in exc['name'] and 'market' in exc['name'] and exc['type'] == 'technosphere':
+                        exc['code'] = techno_mixes[
+                            (exc['name'].replace('market for', 'technology mix for'), process['location'])]
+                        exc["database"] = regio.target_db_name
+                        exc["location"] = process["location"]
+                        exc["input"] = (exc["database"], exc["code"])
                     # find correct technology for production
                     if (
                         other_processes_data[(exc["product"], process["location"])][i]["name"]
@@ -278,7 +285,7 @@ def second_order_regionalization(regio):
         duplicates = [
             item
             for item, count in collections.Counter(
-                [i["input"] for i in process["exchanges"]]
+                [i["input"] for i in process["exchanges"] if i["type"] == 'technospere']
             ).items()
             if count > 1
         ]
