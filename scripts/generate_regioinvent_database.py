@@ -18,8 +18,8 @@ if str(SRC) not in sys.path:
 import regioinvent
 
 
-SUPPORTED_ECOINVENT_VERSIONS = ("3.9", "3.9.1", "3.10", "3.10.1")
-SUPPORTED_LCIA_METHODS = ("IW v2.1", "EF v3.1", "ReCiPe 2016 v1.03 (H)", "all")
+SUPPORTED_ECOINVENT_VERSIONS = ("3.10", "3.10.1", "3.11", "3.12")
+SUPPORTED_LCIA_METHODS = ("IW v2.2.1", "EF v3.1", "ReCiPe 2016 v1.03 (H)", "all")
 
 
 def parse_args() -> argparse.Namespace:
