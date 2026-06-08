@@ -2,6 +2,7 @@
 
 This document describes in details the methodology that is followed by regioinvent to regionalize ecoinvent to its 
 fullest potential.
+Note that all the steps to derive the trade data are provided in the forms of Jupyter notebooks in the doc/ folder.
 
 The methodology is divided into multiple sections:
 1. [Selection of the trade database](#selection-of-the-trade-database)
