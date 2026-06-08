@@ -9,7 +9,7 @@ version of ecoinvent which almost does not rely on non-national processes such a
 Furthermore, since the resulting regionalized version of ecoinvent relies much less on broad regions, the regionalization
 of impacts can show its full potential. Therefore, ```Regioinvent``` also fully spatializes all relevant elementary flows
 and connects these spatialized elementary flows to regionalized life cycle impact assessment methods. There are currently
-three LCIA regionalized methods implemented: IMPACT World+ v2.1 / EF 3.1 / ReCiPe 2016 v1.03 (H).
+three LCIA regionalized methods implemented: IMPACT World+ v2.2.1 / EF 3.1 / ReCiPe 2016 v1.03 (H).
 
 ## Showcase
 To showcase what ```Regioinvent``` does, let's illustrate on a random example: the production of diethanolamine in Sweden.
