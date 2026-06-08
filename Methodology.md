@@ -82,14 +82,16 @@ ratios (currently implemented in regioinvent) was about 80% off. The other thoug
 more like 200% off. The reason why both completely struggle is because there are many cases where countries produce, but
 100% consume domestically and thus do not export anything. A perfect example of that would be the production of iron ores
 in China. Because China only imports iron ores, with the two approaches, it is undertanding that China does not produce
-iron ores, since it's not exporting any. While inr eality, we know that, yes, China actually produces iron ores (a lot
+iron ores, since it's not exporting any. While in reality, we know that, yes, China actually produces iron ores (a lot
 actually).
 
 To compensate for mistakes like this, we try to connect to existing production volume databases for a few commodities.
-In v1.3, we connected to FAOSTAT, which covers production volumes for many agriculture processes (but not all) and to
-BGS/USGS which provides data for minerals/metals extraction and some metal production. That way, we have the actual 
-production of iron ores by China. In the future, we might integrate other production volume databases, for example the
-PRODCOM database from Eurostat (https://ec.europa.eu/eurostat/databrowser/view/ds-056121__custom_10748582/default/table?lang=en).
+In v1.4, we have connected to FAOSTAT for both agriculture and forestry products, the USGS for mineral extraction and
+production of basic metals, to the World Steel Association data for production on basic steel products, to the OICA data
+for production on vehicles and finally to the PRODCOM database of the EU for partial production data on many commodities.
+For the latter, since it only covers European country and has many data gaps, whenever a data point was provided by this 
+data source it was later completed through the approach with EXIOBASE. So it's a hybrid approach that can (and maybe will)
+be applied in the future to other partial production data.
 
 Note that relying on production/export ratios from EXIOBASE creates huge inconsistencies for cases when the ratio is 
 estimated to be extremely close to 100% or 0% (e.g., 99.99998%), which can happen due to artefacts. To solve this, we
@@ -105,7 +107,7 @@ are the 7th biggest exporters of bananas in the world. Now in case you are not s
 do not grow in the Netherlands. And our algorithm uses exports to estimate production volumes. If nothing is done, the 
 Netherlands will be identified as a big producer of bananas. That is why re-exports must be corrected somehow.
 
-Out contingency plan ended up being to simply use net exports instead of exports. Net exports are the difference of 
+Our contingency plan ended up being to simply use net exports instead of exports. Net exports are the difference of 
 exports and imports. So if a country, such as the Netherlands, does a lot of re-exports, they will definitely import 
 more than they export, and thus have a net export of zero, or a negative one. Big producers will most likely have a 
 positive net export balance (although we come back to the iron ores in China example), while smaller producers might 
@@ -188,11 +190,8 @@ require new commodities/geography combination to be created as well. And it basi
 we just directly regionalize for all the geographies used within regioinvent (which can be found in the 
 geographies_of_regioinvent.json files).
 
-_The paragraph on the effect of the cutoff below was written for regioinvent v1.2.2 and has not been updated for
-regioinvent v1.3 yet_ <br>
 The effect of the cutoff selection on the results was estimated between the cutoff: 99%, 90% and 75%. You can see these
-effects applied to the IW+ v2.1 LCIA method. The numbers represent the median relative difference between all processes
-that are covered in all three versions of regioinvent (i.e., regioinvent with 99%, 90% and 75% cutoff). Overall, if we
+effects applied to the IW+ v2.1 LCIA method in the regioinvent article. Overall, if we
 consider that the 99% cutoff provides the most accurate results, going from 99% to 90% triggers differences of about
 ~1 to 2% on most of the impact categories, but reduces the size of regionvent from ~230,000 processes to ~85,000. 
 Going from 99% to 75% leads to differences of ~2 to 3%, but reduces the size to ~42,000 processes. Essentially, if you
@@ -276,14 +275,15 @@ think of the markets of ecoinvent.
 ### Dealing with yearly fluctuation of trade data
 To not be subject to the whims of the trade market changing constantly, which would affect the robustness from year to 
 year of the assessments carried out with regioinvent (and also requiring to redo regioinvent every year), we chose to
-take the average trade data over the 5 last years available. For regioinvent v1.2, this mainly corresponds to data for 
-the years 2018, 2019, 2020, 2021 and 2022. A simply arithmetic average is performed. <br>
-There are a few exceptions for which only the year 2022 was considered because the corresponding commodity only exists 
+take the average trade data over the 5 last years available. For regioinvent v1.4, this mainly corresponds to data for 
+the years 2020, 2021, 2022, 2023 and 2024. A simply arithmetic average is performed. <br>
+There are a few exceptions for which only the years 2022, 2023 and 2024 were considered because the corresponding commodity only exists 
 in the HS22 version of UN COMTRADE, and not in the HS17 version. For instance, the commodity 290341 - trifluomethane (HFC-23)
 is only available in HS22, otherwise it would be under 290339 - Other fluorinated, brominated or iodinated derivatives of 
 acyclic hydrocarbons, which is much less precise.
 
-Here are the commodities which are only under the year 2022: ['290341', '290343', '290349', '854142', '854143', '854159']
+Here are the commodities which are only under the years 2022, 2023 and 2024: ['290341', '290343', '290349', '854142', '854143', '854159',
+'441881', '441882', '441883']
 
 ### Spatialization of elementary flows
 The spatialization of elementary flows is an important aspect of the work of regioinvent. However, it is quite easy to 
@@ -306,7 +306,7 @@ characterized and the results will mean nothing. You therefore cannot use regioi
 of brightway2. To be clear, there won't be any error and everything will work, but for impact categories with spatialized
 elementary flows, the results will be wrong.
 
-Regioinvent v1.3 operates with IMPACT World+ v2.1,  ReCiPe 2016 v1.03 (H) and EF 3.1. Users are welcome to contribute by 
+Regioinvent v1.4 operates with IMPACT World+ v2.2.1,  ReCiPe 2016 v1.03 (H) and EF 3.1. Users are welcome to contribute by 
 matching with other impact methods.
 
 ### Connecting ecoinvent processes to UN COMTRADE commodities

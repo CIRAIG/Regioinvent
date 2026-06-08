@@ -95,7 +95,7 @@ You will need a few things to get started:
 - Regioinvent does not provide the ecoinvent database, so you need to buy an ecoinvent license yourself.
 - Download all the required trade data that were already extracted.
 You can download it from [here](https://doi.org/10.5281/zenodo.11583814). Make sure to take the latest available version.
-- Install Brightway libraries and have a Brightway project an accepted version of ecoinvent.
+- Install Brightway libraries and have a Brightway project with an accepted version of ecoinvent.
 
 Note that regioinvent currently supports the ecoinvent 3.10/3.10.1/3.11/3.12 cut-off versions.
 
@@ -162,7 +162,7 @@ For a deep dive in the methodology of regioinvent, take a look at the Methodolog
 ## Future developments
 Next steps for regioinvent are to:
 - adapt the transportation within the different markets to reflect the origins of commodities
-- link with the LC-impact LCIA methodology
+- link with the LC-impact LCIA methodology and potentially to GLAM is it becomes available
 - derive and integrate uncertainty factors for consumption markets, based on the year-to-year trade variations
 - find and integrate more and more real production volumes instead of relying on rough estimates
 
