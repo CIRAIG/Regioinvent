@@ -56,6 +56,13 @@ tracker = "https://github.com/CIRAIG/Regioinvent/issues"
 package-dir = {"" = "src"}
 include-package-data = true
 
+[tool.setuptools.package-data]
+regioinvent = [
+    "data/**/*.json",
+    "data/**/*.bw2package",
+    "data/**/*.pickle"
+]
+
 [tool.setuptools.dynamic]
 version = {attr = "regioinvent.__version__"}
 
