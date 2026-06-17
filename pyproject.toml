@@ -54,6 +54,7 @@ tracker = "https://github.com/CIRAIG/Regioinvent/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = true
 
 [tool.setuptools.dynamic]
 version = {attr = "regioinvent.__version__"}
