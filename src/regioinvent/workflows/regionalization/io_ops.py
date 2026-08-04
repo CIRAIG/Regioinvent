@@ -140,6 +140,9 @@ def _connect_ecoinvent_to_regioinvent_in_memory(regio):
 
     regio.logger.info("Connecting ecoinvent to regioinvent processes...")
 
+    if regio.list_locations_to_keep_local_exchanges is None:
+        regio.list_locations_to_keep_local_exchanges = []
+
     # as dictionary to speed searching for information
     consumption_markets_data = {
         (i["name"], i["location"]): i
@@ -156,6 +159,12 @@ def _connect_ecoinvent_to_regioinvent_in_memory(regio):
     for process in regio.ei_wurst:
         # find country/sub-country locations for process, we ignore regions
         location = None
+        keep_exchanges_from_loc_unchanged = False
+
+        # check if the location is a location to keep unchanged
+        if process["location"] in regio.list_locations_to_keep_local_exchanges:
+            keep_exchanges_from_loc_unchanged = True
+
         # for countries (e.g., CA)
         if process["location"] in regio.premise_geo_mapping:  # check if the location is a premise-specific location
             location = regio.premise_geo_mapping[process["location"]]
@@ -170,9 +179,12 @@ def _connect_ecoinvent_to_regioinvent_in_memory(regio):
             for exc in process["exchanges"]:
                 if exc.get("type") != "technosphere":
                     continue
+                # if the exchange location is within the list of unchanged locations, we skip it
+                if keep_exchanges_from_loc_unchanged and exc["location"] == process["location"]:
+                    continue
                 # if the product of the exchange is among the internationally traded commodities
                 if exc["product"] in regio.eco_to_hs_class.keys():
-                    # get the name of the corresponding consumtion market
+                    # get the name of the corresponding consumption market
                     exc["name"] = "consumption market for " + exc["product"]
                     # get the location of the process
                     exc["location"] = location

@@ -282,8 +282,8 @@ class Regioinvent:
     def import_fully_regionalized_impact_method(self, lcia_method="all"):
         return workflow_import_fully_regionalized_impact_method(self, lcia_method)
 
-    def regionalize_ecoinvent_with_trade(self, trade_database_path, target_database_name, cutoff):
-        return workflow_regionalize_ecoinvent_with_trade(self, trade_database_path, target_database_name, cutoff)
+    def regionalize_ecoinvent_with_trade(self, trade_database_path, target_database_name, cutoff, list_locations_to_keep_local_exchanges: list[str] = None):
+        return workflow_regionalize_ecoinvent_with_trade(self, trade_database_path, target_database_name, cutoff, list_locations_to_keep_local_exchanges)
 
     def format_trade_data(self):
         return workflow_format_trade_data(self)
