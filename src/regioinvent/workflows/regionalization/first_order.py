@@ -567,7 +567,10 @@ def first_order_regionalization(regio):
                                 template_region = potential_region
                     # otherwise, take either RoW, GLO or a random available geography
                     if not regio_process:
-                        if "RoW" in possibilities_set[technology]:
+                        if "World" in possibilities[technology]:  # premise databases only
+                            regio_process = copy_process(product, technology, "World", geo)
+                            template_region = "World"
+                        elif "RoW" in possibilities_set[technology]:
                             regio_process = copy_process(product, technology, "RoW", geo)
                             template_region = "RoW"
                         elif "GLO" in possibilities_set[technology]:

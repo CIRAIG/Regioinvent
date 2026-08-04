@@ -187,14 +187,23 @@ def _connect_ecoinvent_to_regioinvent_in_memory(regio):
                         exc["code"] = consumption_markets_data[
                             ("consumption market for " + exc["product"], location)
                         ]["code"]
-                    # if the consumption market does not exist for the process location, take RoW
+                    # if the consumption market does not exist for the process location, take RoW or World
                     else:
-                        exc["database"] = consumption_markets_data[
-                            ("consumption market for " + exc["product"], "RoW")
-                        ]["database"]
-                        exc["code"] = consumption_markets_data[
-                            ("consumption market for " + exc["product"], "RoW")
-                        ]["code"]
+                        try:
+                            exc["database"] = consumption_markets_data[
+                                ("consumption market for " + exc["product"], "RoW")
+                            ]["database"]
+                            exc["code"] = consumption_markets_data[
+                                ("consumption market for " + exc["product"], "RoW")
+                            ]["code"]
+                        except KeyError:  # for premise databases
+                            exc["database"] = consumption_markets_data[
+                                ("consumption market for " + exc["product"], "World")
+                            ]["database"]
+                            exc["code"] = consumption_markets_data[
+                                ("consumption market for " + exc["product"], "World")
+                            ]["code"]
+
                     exc["input"] = (exc["database"], exc["code"])
                 # if the product of the exchange is among the non-international traded commodities
                 elif (
