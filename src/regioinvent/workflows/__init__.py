@@ -15,6 +15,7 @@ from regioinvent.workflows.regionalization import change_electricity
 from regioinvent.workflows.regionalization import change_heat
 from regioinvent.workflows.regionalization import change_waste
 from regioinvent.workflows.regionalization import test_input_presence
+from regioinvent.workflows.regionalization import fix_iam_location_codes
 
 __all__ = [
     "format_trade_data",
@@ -34,4 +35,5 @@ __all__ = [
     "create_consumption_markets",
     "second_order_regionalization",
     "spatialize_elem_flows",
+    "fix_iam_location_codes",
 ]

@@ -68,6 +68,13 @@ def spatialize_my_ecoinvent(regio):
         regio.logger.info("Spatializing ecoinvent...")
         # loop through the whole ecoinvent database
         for process in regio.ei_wurst:
+
+            # check if the location is a premise-specific location
+            if process["location"] in regio.premise_geo_mapping:
+                location = regio.premise_geo_mapping[process["location"]]
+            else:
+                location = process["location"]
+
             # if you have more than 1000 exchanges -> aggregated process (S) -> should not be spatialized
             if len(process["exchanges"]) < 1000:
                 # create a copy, but in the new ecoinvent database
@@ -83,7 +90,7 @@ def spatialize_my_ecoinvent(regio):
                                 # to spatialize it, we need to get the uuid of the existing spatialized flow
                                 exc["code"] = spatialized_flows[
                                     (
-                                        exc["name"] + ", " + process["location"],
+                                        exc["name"] + ", " + location,
                                         exc["categories"],
                                     )
                                 ]
@@ -91,7 +98,7 @@ def spatialize_my_ecoinvent(regio):
                                 # change the database of the exchange as well
                                 exc["database"] = regio.name_spatialized_biosphere
                                 # update its name
-                                exc["name"] = exc["name"] + ", " + process["location"]
+                                exc["name"] = exc["name"] + ", " + location
                                 # and finally its input key
                                 exc["input"] = (exc["database"], exc["code"])
                     # if it's a technosphere exchange, just update the database value

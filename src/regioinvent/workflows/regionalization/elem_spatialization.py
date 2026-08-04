@@ -28,6 +28,13 @@ def spatialize_elem_flows(regio):
 
     # loop through regioinvent processes
     for process in regio.regioinvent_in_wurst:
+
+        # check if the location is a premise-specific location
+        if process["location"] in regio.premise_geo_mapping:
+            location = regio.premise_geo_mapping[process["location"]]
+        else:
+            location = process["location"]
+
         # loop through exchanges of process
         for exc in process["exchanges"]:
             # if the exchange is a biosphere exchange
@@ -42,13 +49,13 @@ def spatialize_elem_flows(regio):
                         # get code of spatialized flow for process['location']
                         exc["code"] = regionalized_flows[
                             (
-                                base_name_flow + ", " + process["location"],
+                                base_name_flow + ", " + location,
                                 exc["categories"],
                             )
                         ]
                         # change database name of exchange
                         exc["database"] = regio.name_spatialized_biosphere
                         # change name of exchange
-                        exc["name"] = base_name_flow + ", " + process["location"]
+                        exc["name"] = base_name_flow + ", " + location
                         # change input key of exchange
                         exc["input"] = (exc["database"], exc["code"])

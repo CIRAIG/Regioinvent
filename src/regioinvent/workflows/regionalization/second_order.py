@@ -272,39 +272,40 @@ def second_order_regionalization(regio):
                     except KeyError:
                         pass
 
-    regio.logger.info("Aggregate duplicates together...")
+    if regio.premise_database_name is None:  # skipped for premise databases (aggregation issue)
+        regio.logger.info("Aggregate duplicates together...")
 
-    # aggregating duplicate inputs (e.g., multiple consumption markets RoW callouts)
-    for process in regio.regioinvent_in_wurst:
-        for exc in process["exchanges"]:
-            try:
-                exc["input"]
-            except KeyError:
-                exc["input"] = (exc["database"], exc["code"])
+        # aggregating duplicate inputs (e.g., multiple consumption markets RoW callouts)
+        for process in regio.regioinvent_in_wurst:
+            for exc in process["exchanges"]:
+                try:
+                    exc["input"]
+                except KeyError:
+                    exc["input"] = (exc["database"], exc["code"])
 
-        duplicates = [
-            item
-            for item, count in collections.Counter(
-                [i["input"] for i in process["exchanges"] if i["type"] == 'technospere']
-            ).items()
-            if count > 1
-        ]
-
-        for duplicate in duplicates:
-            total = sum([i["amount"] for i in process["exchanges"] if i["input"] == duplicate])
-            name = [i["name"] for i in process["exchanges"] if i["input"] == duplicate][0]
-            product = [i["product"] for i in process["exchanges"] if i["input"] == duplicate][0]
-            database = [i["database"] for i in process["exchanges"] if i["input"] == duplicate][0]
-            location = [i["location"] for i in process["exchanges"] if i["input"] == duplicate][0]
-
-            process["exchanges"] = [i for i in process["exchanges"] if i["input"] != duplicate] + [
-                {
-                    "amount": total,
-                    "type": "technosphere",
-                    "input": duplicate,
-                    "name": name,
-                    "database": database,
-                    "product": product,
-                    "location": location,
-                }
+            duplicates = [
+                item
+                for item, count in collections.Counter(
+                    [i["input"] for i in process["exchanges"] if i["type"] == 'technospere']
+                ).items()
+                if count > 1
             ]
+
+            for duplicate in duplicates:
+                total = sum([i["amount"] for i in process["exchanges"] if i["input"] == duplicate])
+                name = [i["name"] for i in process["exchanges"] if i["input"] == duplicate][0]
+                product = [i["product"] for i in process["exchanges"] if i["input"] == duplicate][0]
+                database = [i["database"] for i in process["exchanges"] if i["input"] == duplicate][0]
+                location = [i["location"] for i in process["exchanges"] if i["input"] == duplicate][0]
+
+                process["exchanges"] = [i for i in process["exchanges"] if i["input"] != duplicate] + [
+                    {
+                        "amount": total,
+                        "type": "technosphere",
+                        "input": duplicate,
+                        "name": name,
+                        "database": database,
+                        "product": product,
+                        "location": location,
+                    }
+                ]

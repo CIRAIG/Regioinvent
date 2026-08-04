@@ -29,6 +29,7 @@ from regioinvent.workflows.regionalization.transformations import change_electri
 from regioinvent.workflows.regionalization.transformations import change_heat
 from regioinvent.workflows.regionalization.transformations import change_waste
 from regioinvent.workflows.regionalization.transformations import test_input_presence
+from regioinvent.workflows.regionalization.transformations import fix_iam_location_codes
 
 __all__ = [
     "regionalize_ecoinvent_with_trade",
@@ -46,4 +47,5 @@ __all__ = [
     "change_waste",
     "change_heat",
     "test_input_presence",
+    "fix_iam_location_codes",
 ]

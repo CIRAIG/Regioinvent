@@ -67,15 +67,26 @@ from regioinvent.workflows.regionalization import (
 from regioinvent.workflows.regionalization import (
     test_input_presence as workflow_test_input_presence,
 )
+from regioinvent.workflows.regionalization import (
+    fix_iam_location_codes as workflow_fix_iam_location_codes,
+)
 
 
 class Regioinvent:
-    def __init__(self, bw_project_name, ecoinvent_database_name, ecoinvent_version):
+    def __init__(
+            self,
+            bw_project_name: str,
+            ecoinvent_database_name: str,
+            ecoinvent_version: str,
+            premise_database_name: str = None,
+    ):
         """
         :param bw_project_name:         [str] the name of a brightway2 project containing an ecoinvent database.
         :param ecoinvent_database_name: [str] the name of the ecoinvent database within the brightway2 project.
         :param ecoinvent_version:       [str] the version of the ecoinvent database within the brightway2 project,
                                             values can be "3.10" or "3.10.1". "3.11", "3.12".
+        :param premise_database_name:   [str] name of the premise database within the brightway2 project. Set to None
+                                            if the regionalized database is an ecoinvent database.
         """
 
         # set up logging tool
@@ -100,8 +111,10 @@ class Regioinvent:
                 "The ecoinvent database name passed does not match with the existing databases within the brightway project."
             )
 
-        self.source_db_name = ecoinvent_database_name
-        self.regionalized_ecoinvent_db_name = f"{ecoinvent_database_name} - regionalized"
+        self.source_db_name = ecoinvent_database_name if premise_database_name is None else premise_database_name
+        self.regionalized_ecoinvent_db_name = f"{self.source_db_name} - regionalized"
+        self.premise_database_name = premise_database_name
+        self.ecoinvent_database_name = ecoinvent_database_name
         if ecoinvent_version not in ["3.10", "3.10.1", "3.11", "3.12"]:
             raise KeyError(
                 "The version of ecoinvent you provided is not supported by Regioinvent."
@@ -141,6 +154,11 @@ class Regioinvent:
         ) as file_path:
             with open(file_path, "r") as f:
                 self.country_to_ecoinvent_regions = json.load(f)
+
+        if premise_database_name is not None:  # removing the WEU location from the dict to avoid conflict with IAM regions
+            for loc_list in self.country_to_ecoinvent_regions.values():
+                if 'WEU' in loc_list:
+                    loc_list[:] = [loc for loc in loc_list if loc != 'WEU']
 
         with as_file(
             files("regioinvent").joinpath(
@@ -214,6 +232,17 @@ class Regioinvent:
             with open(file_path, "r") as f:
                 self.no_inputs_processes = json.load(f)
 
+        with as_file(files('regioinvent').joinpath(
+                f"data/Regionalization/premise/ei_premise_iam_locations_geo_mapping.json")) as file_path:
+            with open(file_path, "r") as f:
+                self.premise_geo_mapping = json.load(f)
+
+        with as_file(files('regioinvent').joinpath(
+                f"data/Regionalization/premise/ei_premise_additional_locations_geo_mapping.json")) as file_path:
+            with open(file_path, "r") as f:
+                self.premise_add_geo_mapping = json.load(f)
+        self.premise_geo_mapping = self.premise_geo_mapping | self.premise_add_geo_mapping
+
         # initialize attributes used within package
         self.assigned_random_geography = []
         self.regioinvent_in_wurst = []
@@ -233,6 +262,7 @@ class Regioinvent:
         self.cutoff = 0
         self._spatialized_in_memory_ready = False
         self._final_database_in_memory = None
+        self.skipped_regio_processes = []
 
     def _extract_brightway2_databases(self, database_name):
         """
@@ -246,11 +276,14 @@ class Regioinvent:
     def spatialize_ecoinvent(self):
         return self.spatialize_my_ecoinvent()
 
+    def fix_iam_location_codes(self):
+        return workflow_fix_iam_location_codes(self)
+
     def import_fully_regionalized_impact_method(self, lcia_method="all"):
         return workflow_import_fully_regionalized_impact_method(self, lcia_method)
 
-    def regionalize_ecoinvent_with_trade(self, trade_database_path, target_database_name, cutoff):
-        return workflow_regionalize_ecoinvent_with_trade(self, trade_database_path, target_database_name, cutoff)
+    def regionalize_ecoinvent_with_trade(self, trade_database_path, target_database_name, cutoff, list_locations_to_keep_local_exchanges: list[str] = None):
+        return workflow_regionalize_ecoinvent_with_trade(self, trade_database_path, target_database_name, cutoff, list_locations_to_keep_local_exchanges)
 
     def format_trade_data(self):
         return workflow_format_trade_data(self)

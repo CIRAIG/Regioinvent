@@ -567,7 +567,10 @@ def first_order_regionalization(regio):
                                 template_region = potential_region
                     # otherwise, take either RoW, GLO or a random available geography
                     if not regio_process:
-                        if "RoW" in possibilities_set[technology]:
+                        if "World" in possibilities[technology]:  # premise databases only
+                            regio_process = copy_process(product, technology, "World", geo)
+                            template_region = "World"
+                        elif "RoW" in possibilities_set[technology]:
                             regio_process = copy_process(product, technology, "RoW", geo)
                             template_region = "RoW"
                         elif "GLO" in possibilities_set[technology]:
@@ -584,6 +587,24 @@ def first_order_regionalization(regio):
                                 )
                                 template_region = possibilities[technology][0]
                                 regio.assigned_random_geography.append([product, technology, geo])
+
+                    good_regio_process = False
+                    while good_regio_process is False:
+                        technosphere_flows = [i for i in regio_process['exchanges'] if i['type'] == 'technosphere']
+                        if len(technosphere_flows) == 1:
+                            if product == technosphere_flows[0]['product']:
+                                next_loc = technosphere_flows[0]['location']
+                                regio.skipped_regio_processes.append(regio_process)
+                                global_market_activity['exchanges'] = [
+                                    i for i in global_market_activity['exchanges']
+                                    if i['input'] != (regio_process['database'], regio_process['code'])
+                                ]  # remove old regio_process from global_market_activity exchanges
+                                regio_process = copy_process(product, technology, next_loc, geo)
+                                template_region = next_loc
+                            else:
+                                good_regio_process = True
+                        else:
+                            good_regio_process = True
 
                     # for each input, we test the presence of said inputs and regionalize that input
                     # testing the presence allows to save time if the input in question is just not used by the process
