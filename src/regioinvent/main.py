@@ -262,6 +262,7 @@ class Regioinvent:
         self.cutoff = 0
         self._spatialized_in_memory_ready = False
         self._final_database_in_memory = None
+        self.skipped_regio_processes = []
 
     def _extract_brightway2_databases(self, database_name):
         """
