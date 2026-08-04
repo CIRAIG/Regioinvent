@@ -155,6 +155,11 @@ class Regioinvent:
             with open(file_path, "r") as f:
                 self.country_to_ecoinvent_regions = json.load(f)
 
+        if premise_database_name is not None:  # removing the WEU location from the dict to avoid conflict with IAM regions
+            for loc_list in self.country_to_ecoinvent_regions.values():
+                if 'WEU' in loc_list:
+                    loc_list[:] = [loc for loc in loc_list if loc != 'WEU']
+
         with as_file(
             files("regioinvent").joinpath(
                 f"data/Regionalization/ei{self.ecoinvent_version}/electricity_processes.json"
