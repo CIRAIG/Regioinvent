@@ -1,5 +1,5 @@
 import wurst.searching as ws
-
+import bw2data as bd
 
 def change_electricity(regio, process, export_country):
     """
@@ -508,20 +508,21 @@ def change_heat(regio, process, export_country, heat_flow):
                     * [
                         i["amount"]
                         for i in global_heat_process["exchanges"]
-                        if i["location"] == "RoW"
+                        if (i["location"] == "RoW") | (i["location"] == "World")
                     ][0]
                     for k, v in heat_exchanges.items()
                 }
-                heat_exchanges[
-                    (
-                        [i for i in global_heat_process["exchanges"] if i["location"] == "CA-QC"][
-                            0
-                        ]["name"],
-                        "CA-QC",
-                    )
-                ] = [i for i in global_heat_process["exchanges"] if i["location"] == "CA-QC"][0][
-                    "amount"
-                ]
+                if regio.premise_database_name is None:
+                    heat_exchanges[
+                        (
+                            [i for i in global_heat_process["exchanges"] if i["location"] == "CA-QC"][
+                                0
+                            ]["name"],
+                            "CA-QC",
+                        )
+                    ] = [i for i in global_heat_process["exchanges"] if i["location"] == "CA-QC"][0][
+                        "amount"
+                    ]
         else:
             # extracting amount of heat of country within region heat market process
             heat_exchanges = {}
@@ -595,3 +596,20 @@ def test_input_presence(regio, process, input_name, extra=None):
     else:
         for exc in ws.technosphere(process, ws.equals("product", input_name)):
             return True
+
+def fix_iam_location_codes(regio):
+    """
+    Function to fix the location codes of the IAM region conflicting with ecoinvent.
+
+    :return: None (modifies the SQL database)
+    """
+    premise_db = {(i['name'], i['reference product'], i['location']): i
+                  for i in bd.Database(regio.premise_database_name) if i['location'] == 'ME'}
+    ei_db = {(i['name'], i['reference product'], i['location']): i
+             for i in bd.Database(regio.ecoinvent_database_name) if i['location'] == 'ME'}
+
+    for act_key in premise_db.keys():
+        if act_key not in ei_db.keys():
+            act = premise_db[act_key]
+            act.as_dict()['location'] = 'RME'
+            act.save()

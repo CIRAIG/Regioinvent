@@ -67,6 +67,9 @@ from regioinvent.workflows.regionalization import (
 from regioinvent.workflows.regionalization import (
     test_input_presence as workflow_test_input_presence,
 )
+from regioinvent.workflows.regionalization import (
+    fix_iam_location_codes as workflow_fix_iam_location_codes,
+)
 
 
 class Regioinvent:
@@ -266,6 +269,9 @@ class Regioinvent:
 
     def spatialize_ecoinvent(self):
         return self.spatialize_my_ecoinvent()
+
+    def fix_iam_location_codes(self):
+        return workflow_fix_iam_location_codes(self)
 
     def import_fully_regionalized_impact_method(self, lcia_method="all"):
         return workflow_import_fully_regionalized_impact_method(self, lcia_method)
