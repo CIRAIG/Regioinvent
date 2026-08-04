@@ -70,12 +70,20 @@ from regioinvent.workflows.regionalization import (
 
 
 class Regioinvent:
-    def __init__(self, bw_project_name, ecoinvent_database_name, ecoinvent_version):
+    def __init__(
+            self,
+            bw_project_name: str,
+            ecoinvent_database_name: str,
+            ecoinvent_version: str,
+            premise_database_name: str = None,
+    ):
         """
         :param bw_project_name:         [str] the name of a brightway2 project containing an ecoinvent database.
         :param ecoinvent_database_name: [str] the name of the ecoinvent database within the brightway2 project.
         :param ecoinvent_version:       [str] the version of the ecoinvent database within the brightway2 project,
                                             values can be "3.10" or "3.10.1". "3.11", "3.12".
+        :param premise_database_name:   [str] name of the premise database within the brightway2 project. Set to None
+                                            if the regionalized database is an ecoinvent database.
         """
 
         # set up logging tool
@@ -100,8 +108,10 @@ class Regioinvent:
                 "The ecoinvent database name passed does not match with the existing databases within the brightway project."
             )
 
-        self.source_db_name = ecoinvent_database_name
-        self.regionalized_ecoinvent_db_name = f"{ecoinvent_database_name} - regionalized"
+        self.source_db_name = ecoinvent_database_name if premise_database_name is None else premise_database_name
+        self.regionalized_ecoinvent_db_name = f"{self.source_db_name} - regionalized"
+        self.premise_database_name = premise_database_name
+        self.ecoinvent_database_name = ecoinvent_database_name
         if ecoinvent_version not in ["3.10", "3.10.1", "3.11", "3.12"]:
             raise KeyError(
                 "The version of ecoinvent you provided is not supported by Regioinvent."
