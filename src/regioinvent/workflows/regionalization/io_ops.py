@@ -157,7 +157,9 @@ def _connect_ecoinvent_to_regioinvent_in_memory(regio):
         # find country/sub-country locations for process, we ignore regions
         location = None
         # for countries (e.g., CA)
-        if process["location"] in regio.country_to_ecoinvent_regions.keys():
+        if process["location"] in regio.premise_geo_mapping:  # check if the location is a premise-specific location
+            location = regio.premise_geo_mapping[process["location"]]
+        elif process["location"] in regio.country_to_ecoinvent_regions.keys():
             location = process["location"]
         # for sub-countries (e.g., CA-QC)
         elif process["location"].split("-")[0] in regio.country_to_ecoinvent_regions.keys():

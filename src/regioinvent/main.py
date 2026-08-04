@@ -224,6 +224,17 @@ class Regioinvent:
             with open(file_path, "r") as f:
                 self.no_inputs_processes = json.load(f)
 
+        with as_file(files('regioinvent').joinpath(
+                f"data/Regionalization/premise/ei_premise_iam_locations_geo_mapping.json")) as file_path:
+            with open(file_path, "r") as f:
+                self.premise_geo_mapping = json.load(f)
+
+        with as_file(files('regioinvent').joinpath(
+                f"data/Regionalization/premise/ei_premise_additional_locations_geo_mapping.json")) as file_path:
+            with open(file_path, "r") as f:
+                self.premise_add_geo_mapping = json.load(f)
+        self.premise_geo_mapping = self.premise_geo_mapping | self.premise_add_geo_mapping
+
         # initialize attributes used within package
         self.assigned_random_geography = []
         self.regioinvent_in_wurst = []
