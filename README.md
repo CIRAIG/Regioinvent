@@ -118,21 +118,13 @@ regio = regioinvent.Regioinvent(
 )
 
 regio.spatialize_my_ecoinvent()
-regio.import_fully_regionalized_impact_method()  # optional
+regio.import_fully_regionalized_impact_method()
 regio.regionalize_ecoinvent_with_trade(
     trade_database_path="/path/to/trade_data.db",
     target_database_name="Regioinvent",
     cutoff=0.99,
 )
 ```
-
-Important notes:
-- `spatialize_my_ecoinvent()` now writes `biosphere3_spatialized_flows`, but keeps the spatialized ecoinvent copy in memory at this stage.
-- `regionalize_ecoinvent_with_trade(...)` now performs the in-memory relinking between the spatialized ecoinvent copy and the regioinvent database, and then writes both Brightway databases at the end of the workflow.
-- You no longer need to call `write_database()` separately after `regionalize_ecoinvent_with_trade(...)` in the normal high-level workflow.
-- The final Brightway databases are:
-  - `your-ecoinvent-database - regionalized`
-  - the `target_database_name` you passed, e.g. `Regioinvent`
 
 ## How to use after running the code?
 Once the workflow has finished, the spatialized ecoinvent copy and the regioinvent database have already been written to your Brightway

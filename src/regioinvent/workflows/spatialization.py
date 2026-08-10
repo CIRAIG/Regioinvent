@@ -18,7 +18,7 @@ def spatialize_my_ecoinvent(regio):
 
     # ---------------------------- Create the spatialized biosphere ----------------------------
 
-    if "biosphere3_spatialized_flows" not in bd.databases:
+    if regio.name_spatialized_biosphere not in bd.databases:
         regio.logger.info("Creating spatialized biosphere flows...")
         # load the correct pickle file with the different spatialized elementary flows metadata
         with as_file(
