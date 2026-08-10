@@ -170,17 +170,17 @@ jobs:
           python -m build
 
 ## Activate to get a downloadable version of the files that will be included in the pip release
-#      - name: Upload Build Artifacts for Inspection
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: production-packages
-#          path: dist/
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Upload Build Artifacts for Inspection
+        uses: actions/upload-artifact@v4
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip-existing: true
+          name: production-packages
+          path: dist/
+
+#      - name: Publish to PyPI
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          password: ${{ secrets.PYPI_API_TOKEN }}
+#          skip-existing: true
 
 ## Activate (and fix) when we want a conda release
 
