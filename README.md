@@ -102,8 +102,6 @@ Note that regioinvent currently supports the ecoinvent 3.10/3.10.1/3.11/3.12 cut
 You can then follow the steps presented in the [demo.ipynb](https://github.com/CIRAIG/Regioinvent/tree/master/doc/demo.ipynb) 
 Jupyter notebook.
 
-Recommended python version: 3.11.8
-
 ## User workflow
 
 The recommended user-side workflow is now:

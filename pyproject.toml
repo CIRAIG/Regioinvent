@@ -60,7 +60,8 @@ include-package-data = true
 regioinvent = [
     "data/**/*.json",
     "data/**/*.bw2package",
-    "data/**/*.pickle"
+    "data/**/*.pickle",
+    "data/**/**/*.xlsx"
 ]
 
 [tool.setuptools.dynamic]
