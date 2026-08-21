@@ -83,6 +83,8 @@ def format_trade_data(regio):
     regio.domestic_production = pd.read_sql(
         "SELECT * FROM [Domestic production data]", regio.trade_conn
     )
+    # add importer column
+    regio.domestic_production.loc[:, 'importer'] = regio.domestic_production.exporter
 
     # concatenate import and domestic data into consumption data
     regio.consumption_data = pd.concat(
