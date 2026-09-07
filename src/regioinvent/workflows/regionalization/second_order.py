@@ -121,94 +121,95 @@ def second_order_regionalization(regio):
                         exc["location"] = process["location"]
                         exc["input"] = (exc["database"], exc["code"])
 
-    # reduce the size of the database by culling processes unused by internationally traded commodities
-    used_techno_mixes = []
+    if not regio.regionalize_water_flows_only:
+        # reduce the size of the database by culling processes unused by internationally traded commodities
+        used_techno_mixes = []
 
-    for process in regio.regioinvent_in_wurst:
-        if (
-            "consumption market" not in process["name"]
-            and "production market" not in process["name"]
-            and process["reference product"] in regio.eco_to_hs_class.keys()
-        ):
-            for exc in process["exchanges"]:
-                if "technology mix" in exc["name"]:
-                    if (
-                        exc["name"],
-                        exc["product"],
-                        exc["location"],
-                    ) not in used_techno_mixes:
-                        used_techno_mixes.append((exc["name"], exc["product"], exc["location"]))
-        # we want to make sure we always have the RoW technology mix for a default option
-        if "technology mix" in process["name"] and "RoW" == process["location"]:
+        for process in regio.regioinvent_in_wurst:
             if (
-                process["name"],
-                process["reference product"],
-                process["location"],
-            ) not in used_techno_mixes:
-                used_techno_mixes.append(
-                    (
-                        process["name"],
-                        process["reference product"],
-                        process["location"],
-                    )
-                )
-
-    reduced_regioinvent = []
-    for ds in regio.regioinvent_in_wurst:
-        if "technology mix" in ds["name"]:
-            if (
-                ds["name"],
-                ds["reference product"],
-                ds["location"],
-            ) in used_techno_mixes:
-                reduced_regioinvent.append(ds)
-        else:
-            reduced_regioinvent.append(ds)
-
-    regio.regioinvent_in_wurst = copy.copy(reduced_regioinvent)
-
-    # redetermine available techno mixes, since we culled some of them
-    techno_mixes = {
-        (i["name"], i["location"]): i["code"]
-        for i in regio.regioinvent_in_wurst
-        if "technology mix" in i["name"]
-    }
-
-    used_prod_processes = []
-    for process in regio.regioinvent_in_wurst:
-        if "technology mix" in process["name"]:
-            for exc in process["exchanges"]:
+                "consumption market" not in process["name"]
+                and "production market" not in process["name"]
+                and process["reference product"] in regio.eco_to_hs_class.keys()
+            ):
+                for exc in process["exchanges"]:
+                    if "technology mix" in exc["name"]:
+                        if (
+                            exc["name"],
+                            exc["product"],
+                            exc["location"],
+                        ) not in used_techno_mixes:
+                            used_techno_mixes.append((exc["name"], exc["product"], exc["location"]))
+            # we want to make sure we always have the RoW technology mix for a default option
+            if "technology mix" in process["name"] and "RoW" == process["location"]:
                 if (
-                    exc["type"] == "technosphere"
-                    and exc["product"] in regionalized_products
-                    and exc["product"] not in regio.eco_to_hs_class.keys()
-                    and "technology mix" not in exc["name"]
-                ):
+                    process["name"],
+                    process["reference product"],
+                    process["location"],
+                ) not in used_techno_mixes:
+                    used_techno_mixes.append(
+                        (
+                            process["name"],
+                            process["reference product"],
+                            process["location"],
+                        )
+                    )
+
+        reduced_regioinvent = []
+        for ds in regio.regioinvent_in_wurst:
+            if "technology mix" in ds["name"]:
+                if (
+                    ds["name"],
+                    ds["reference product"],
+                    ds["location"],
+                ) in used_techno_mixes:
+                    reduced_regioinvent.append(ds)
+            else:
+                reduced_regioinvent.append(ds)
+
+        regio.regioinvent_in_wurst = copy.copy(reduced_regioinvent)
+
+        # redetermine available techno mixes, since we culled some of them
+        techno_mixes = {
+            (i["name"], i["location"]): i["code"]
+            for i in regio.regioinvent_in_wurst
+            if "technology mix" in i["name"]
+        }
+
+        used_prod_processes = []
+        for process in regio.regioinvent_in_wurst:
+            if "technology mix" in process["name"]:
+                for exc in process["exchanges"]:
                     if (
-                        exc["name"],
-                        exc["product"],
-                        exc["location"],
-                    ) not in used_prod_processes:
-                        used_prod_processes.append((exc["name"], exc["product"], exc["location"]))
+                        exc["type"] == "technosphere"
+                        and exc["product"] in regionalized_products
+                        and exc["product"] not in regio.eco_to_hs_class.keys()
+                        and "technology mix" not in exc["name"]
+                    ):
+                        if (
+                            exc["name"],
+                            exc["product"],
+                            exc["location"],
+                        ) not in used_prod_processes:
+                            used_prod_processes.append((exc["name"], exc["product"], exc["location"]))
 
-    even_more_reduced_regioinvent = []
-    for ds in regio.regioinvent_in_wurst:
-        if (
-            "technology mix" not in ds["name"]
-            and "consumption market" not in ds["name"]
-            and "production market" not in ds["name"]
-            and ds["reference product"] not in regio.eco_to_hs_class.keys()
-        ):
+        even_more_reduced_regioinvent = []
+        for ds in regio.regioinvent_in_wurst:
             if (
-                ds["name"],
-                ds["reference product"],
-                ds["location"],
-            ) in used_prod_processes:
+                "technology mix" not in ds["name"]
+                and "consumption market" not in ds["name"]
+                and "production market" not in ds["name"]
+                and ds["reference product"] not in regio.eco_to_hs_class.keys()
+            ):
+                if (
+                    ds["name"],
+                    ds["reference product"],
+                    ds["location"],
+                ) in used_prod_processes:
+                    even_more_reduced_regioinvent.append(ds)
+            else:
                 even_more_reduced_regioinvent.append(ds)
-        else:
-            even_more_reduced_regioinvent.append(ds)
 
-    regio.regioinvent_in_wurst = copy.copy(even_more_reduced_regioinvent)
+        regio.regioinvent_in_wurst = copy.copy(even_more_reduced_regioinvent)
 
     # loop through created processes and link to non-internationally traded commodities
     for process in regio.regioinvent_in_wurst:

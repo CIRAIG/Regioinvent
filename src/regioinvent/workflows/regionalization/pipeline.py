@@ -7,6 +7,7 @@ def regionalize_ecoinvent_with_trade(
         target_database_name,
         cutoff,
         list_locations_to_keep_local_exchanges,
+        regionalize_water_flows_only,
 ):
     """
     Function runs all the necessary sub-functions to incorporate trade data within ecoinvent supply chains
@@ -18,6 +19,8 @@ def regionalize_ecoinvent_with_trade(
     :param list_locations_to_keep_local_exchanges: [list of str] list of region/country codes (e.g., ['US', 'CA-QC'])
             for which local exchanges in ecoinvent should be kept unchanged. This is useful when the user wants to keep
             specific regionalization in ecoinvent for some regions/countries (e.g., CA provinces, US states, etc.).
+    :param regionalize_water_flows_only: [bool] if True, only water flows will be regionalized. If False, all flows
+            will be regionalized. Default is False.
     :return:
     """
 
@@ -26,6 +29,10 @@ def regionalize_ecoinvent_with_trade(
     regio.regionalized_ecoinvent_db_name = f"{regio.source_db_name} - regionalized"
     regio.cutoff = cutoff
     regio.list_locations_to_keep_local_exchanges = list_locations_to_keep_local_exchanges
+    regio.regionalize_water_flows_only = regionalize_water_flows_only
+
+    if regio.regionalize_water_flows_only:
+        regio.eco_to_hs_class = {}
 
     if cutoff > 0.99 or cutoff < 0:
         raise KeyError("cutoff must be between 0 and 0.99")

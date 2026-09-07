@@ -397,13 +397,25 @@ def first_order_regionalization(regio):
 
     # -----------------------------------------------------------------------------------------------------------
     # in a second time, we regionalize the most relevant other products, see doc/ to see how we selected those
-    with as_file(
-        files("regioinvent").joinpath(
-            f"data/Regionalization/ei{regio.ecoinvent_version}/relevant_non_traded_products.json"
-        )
-    ) as file_path:
-        with open(file_path, "r") as f:
-            relevant_non_traded_products = json.load(f)
+    if regio.regionalize_water_flows_only:
+        relevant_non_traded_products = [
+            'irrigation',
+            'water, deionised',
+            'water, ultrapure',
+            'water, decarbonised',
+            'water, completely softened',
+            'tap water',
+            'wastewater, average',
+            'wastewater, unpolluted',
+        ]
+    else:
+        with as_file(
+            files("regioinvent").joinpath(
+                f"data/Regionalization/ei{regio.ecoinvent_version}/relevant_non_traded_products.json"
+            )
+        ) as file_path:
+            with open(file_path, "r") as f:
+                relevant_non_traded_products = json.load(f)
 
     # get all the geographies of regioinvent
     with as_file(
