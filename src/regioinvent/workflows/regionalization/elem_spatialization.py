@@ -28,27 +28,29 @@ def spatialize_elem_flows(regio):
 
     # loop through regioinvent processes
     for process in regio.regioinvent_in_wurst:
-        # loop through exchanges of process
-        for exc in process["exchanges"]:
-            # if the exchange is a biosphere exchange
-            if exc["type"] == "biosphere":
-                # strip the potential region from the spatialized flow name and check if it's a spatialized flow
-                # if region had a comma in the name it would be a problem, but it's not happening as the geographies
-                # used for copies in regioinvent don't contain commas
-                if ", ".join(exc["name"].split(", ")[:-1]) in spatialized_elem_flows.keys():
-                    base_name_flow = ", ".join(exc["name"].split(", ")[:-1])
-                    # check that the flow is spatialized for the compartment
-                    if exc["categories"][0] in spatialized_elem_flows[base_name_flow]:
-                        # get code of spatialized flow for process['location']
-                        exc["code"] = regionalized_flows[
-                            (
-                                base_name_flow + ", " + process["location"],
-                                exc["categories"],
-                            )
-                        ]
-                        # change database name of exchange
-                        exc["database"] = regio.name_spatialized_biosphere
-                        # change name of exchange
-                        exc["name"] = base_name_flow + ", " + process["location"]
-                        # change input key of exchange
-                        exc["input"] = (exc["database"], exc["code"])
+        # if you have more than 1000 exchanges -> aggregated process (S) -> should not be spatialized
+        if len(process["exchanges"]) < 1000:
+            # loop through exchanges of process
+            for exc in process["exchanges"]:
+                # if the exchange is a biosphere exchange
+                if exc["type"] == "biosphere":
+                    # strip the potential region from the spatialized flow name and check if it's a spatialized flow
+                    # if region had a comma in the name it would be a problem, but it's not happening as the geographies
+                    # used for copies in regioinvent don't contain commas
+                    if ", ".join(exc["name"].split(", ")[:-1]) in spatialized_elem_flows.keys():
+                        base_name_flow = ", ".join(exc["name"].split(", ")[:-1])
+                        # check that the flow is spatialized for the compartment
+                        if exc["categories"][0] in spatialized_elem_flows[base_name_flow]:
+                            # get code of spatialized flow for process['location']
+                            exc["code"] = regionalized_flows[
+                                (
+                                    base_name_flow + ", " + process["location"],
+                                    exc["categories"],
+                                )
+                            ]
+                            # change database name of exchange
+                            exc["database"] = regio.name_spatialized_biosphere
+                            # change name of exchange
+                            exc["name"] = base_name_flow + ", " + process["location"]
+                            # change input key of exchange
+                            exc["input"] = (exc["database"], exc["code"])
